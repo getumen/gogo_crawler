@@ -9,6 +9,7 @@ import (
 	models "github.com/getumen/gogo_crawler/domains/models"
 	gomock "github.com/golang/mock/gomock"
 	reflect "reflect"
+	time "time"
 )
 
 // MockRequestRepository is a mock of RequestRepository interface
@@ -48,16 +49,16 @@ func (mr *MockRequestRepositoryMockRecorder) IsExist(ctx, url interface{}) *gomo
 }
 
 // FindAllByDomainAndBeforeTimeOrderByNextRequest mocks base method
-func (m *MockRequestRepository) FindAllByDomainOrderByNextRequest(ctx context.Context, domain string, offset, limit int) ([]*models.Request, error) {
-	ret := m.ctrl.Call(m, "FindAllByDomainAndBeforeTimeOrderByNextRequest", ctx, domain, offset, limit)
+func (m *MockRequestRepository) FindAllByDomainAndBeforeTimeOrderByNextRequest(ctx context.Context, domain string, now time.Time, offset, limit int) ([]*models.Request, error) {
+	ret := m.ctrl.Call(m, "FindAllByDomainAndBeforeTimeOrderByNextRequest", ctx, domain, now, offset, limit)
 	ret0, _ := ret[0].([]*models.Request)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // FindAllByDomainAndBeforeTimeOrderByNextRequest indicates an expected call of FindAllByDomainAndBeforeTimeOrderByNextRequest
-func (mr *MockRequestRepositoryMockRecorder) FindAllByDomainOrderByNextRequest(ctx, domain, offset, limit interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindAllByDomainAndBeforeTimeOrderByNextRequest", reflect.TypeOf((*MockRequestRepository)(nil).FindAllByDomainOrderByNextRequest), ctx, domain, offset, limit)
+func (mr *MockRequestRepositoryMockRecorder) FindAllByDomainAndBeforeTimeOrderByNextRequest(ctx, domain, now, offset, limit interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindAllByDomainAndBeforeTimeOrderByNextRequest", reflect.TypeOf((*MockRequestRepository)(nil).FindAllByDomainAndBeforeTimeOrderByNextRequest), ctx, domain, now, offset, limit)
 }
 
 // FindByUrl mocks base method
