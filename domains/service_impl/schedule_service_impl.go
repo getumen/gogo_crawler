@@ -130,7 +130,7 @@ func (s *scheduleService) ScheduleNewRequest(ctx context.Context, in <-chan *mod
 				log.Println(err)
 				continue
 			} else {
-				log.Printf("Schedule request: %s\n", request.Url.String())
+				log.Printf("Schedule new request: %s\n", request.Url.String())
 			}
 		}
 	}
