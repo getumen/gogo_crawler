@@ -16,19 +16,19 @@ import (
 
 type downloadService struct {
 	clientRepository   repository.HttpClientRepository
-	requestMiddleware  []func(r *http.Request, model *models.Request) *http.Request
-	responseMiddleware []func(r *http.Response, model *models.Response) *models.Response
+	requestMiddleware  []func(r *http.Request, model *models.Request)
+	responseMiddleware []func(r *http.Response, model *models.Response)
 }
 
 func NewDownloadService(clientRepository repository.HttpClientRepository) service.DownloadService {
 	return &downloadService{clientRepository: clientRepository}
 }
 
-func (d *downloadService) AddRequestMiddleware(f func(r *http.Request, model *models.Request) *http.Request) {
+func (d *downloadService) AddRequestMiddleware(f func(r *http.Request, model *models.Request)) {
 	d.requestMiddleware = append(d.requestMiddleware, f)
 }
 
-func (d *downloadService) AddResponseMiddleware(f func(r *http.Response, model *models.Response) *models.Response) {
+func (d *downloadService) AddResponseMiddleware(f func(r *http.Response, model *models.Response)) {
 	d.responseMiddleware = append(d.responseMiddleware, f)
 }
 
@@ -53,7 +53,7 @@ func (d *downloadService) constructRequest(request *models.Request) (*http.Reque
 		return nil, err
 	}
 	for _, f := range d.requestMiddleware {
-		r = f(r, request)
+		f(r, request)
 		if r == nil {
 			return nil, errors.New("delete request")
 		}
@@ -91,7 +91,7 @@ func (d *downloadService) constructResponse(response *http.Response) (*models.Re
 	}
 
 	for _, f := range d.responseMiddleware {
-		r = f(response, r)
+		f(response, r)
 		if r == nil {
 			return nil, errors.New("delete response")
 		}

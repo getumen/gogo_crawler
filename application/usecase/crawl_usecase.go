@@ -38,11 +38,11 @@ func NewCrawler(
 	}
 }
 
-func (c *crawler) RequestMiddleware(f func(r *http.Request, model *models.Request) *http.Request) {
+func (c *crawler) RequestMiddleware(f func(r *http.Request, model *models.Request)) {
 	c.downloadService.AddRequestMiddleware(f)
 }
 
-func (c *crawler) ResponseMiddleware(f func(r *http.Response, model *models.Response) *models.Response) {
+func (c *crawler) ResponseMiddleware(f func(r *http.Response, model *models.Response)) {
 	c.downloadService.AddResponseMiddleware(f)
 }
 
