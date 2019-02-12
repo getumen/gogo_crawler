@@ -55,7 +55,6 @@ LOOP:
 				if err != nil {
 					log.Printf("Fail to construct request: %v", request)
 				}
-				log.Printf("Generate request: %s", request.Url.String())
 
 				out <- request
 			}
