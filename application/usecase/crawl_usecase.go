@@ -13,6 +13,8 @@ import (
 
 type Crawler interface {
 	Start(ctx context.Context)
+	RequestMiddleware(f func(r *http.Request, model *models.Request))
+	ResponseMiddleware(f func(r *http.Response, model *models.Response))
 }
 
 type crawler struct {
