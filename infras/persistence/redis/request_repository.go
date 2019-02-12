@@ -92,7 +92,7 @@ func (r *requestRedisRepository) FindAllByDomainAndBeforeTimeOrderByNextRequest(
 			}()
 			defer wg.Done()
 			var req requestRedis
-			v, err := redis.Values(conn.Do(HGETALL, URL+urlStr))
+			v, err := redis.Values(conn.Do(HGETALL, URL+url))
 			if err != nil {
 				return
 			}

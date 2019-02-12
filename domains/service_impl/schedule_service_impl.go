@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-const generateRequestLimit = 100
+const generateRequestLimit = 10
 const heartBeat = time.Second
 
 type scheduleService struct {
@@ -48,13 +48,15 @@ LOOP:
 				log.Println(err)
 				continue
 			}
-			log.Printf("Scheduling %d request", len(requests))
+			log.Printf("Scheduling %d request\n", len(requests))
 			for _, request := range requests {
 				request.JobStatus = models.Running
 				err = s.requestRepository.Save(ctx, request)
 				if err != nil {
 					log.Printf("Fail to construct request: %v", request)
 				}
+				log.Printf("Generate request: %s", request.Url.String())
+
 				out <- request
 			}
 		case <-ctx.Done():
