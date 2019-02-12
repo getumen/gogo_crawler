@@ -105,7 +105,10 @@ func (r *requestRedisRepository) FindAllByDomainAndBeforeTimeOrderByNextRequest(
 	var res []*models.Request
 	for _, urlStr := range urls {
 		if v, ok := m.load(urlStr); ok {
-			res = append(res, newRequestFromRedis(&v))
+			r, err := newRequestFromRedis(&v)
+			if err == nil {
+				res = append(res, r)
+			}
 		}
 	}
 	return res, nil
@@ -155,7 +158,7 @@ func (r *requestRedisRepository) FindByUrl(ctx context.Context, url string) (*mo
 	if err != nil {
 		return nil, err
 	}
-	return newRequestFromRedis(dst), nil
+	return newRequestFromRedis(dst)
 }
 
 func (r *requestRedisRepository) Save(ctx context.Context, request *models.Request) error {
@@ -173,12 +176,15 @@ func (r *requestRedisRepository) Save(ctx context.Context, request *models.Reque
 	if err != nil {
 		return err
 	}
-	redisRequest := newRequestRedis(request)
+	redisRequest, err := newRequestRedis(request)
+	if err != nil {
+		return err
+	}
 	_, err = conn.Do(HMSET, redis.Args{}.Add(URL + request.Url.String()).AddFlat(redisRequest)...)
 	return err
 }
 
-func newRequestRedis(m *models.Request) *requestRedis {
+func newRequestRedis(m *models.Request) (*requestRedis, error) {
 	r := &requestRedis{}
 	r.Url = m.Url.String()
 	r.Method = m.Method
@@ -191,29 +197,38 @@ func newRequestRedis(m *models.Request) *requestRedis {
 	r.LastRequest = m.LastRequest.Unix()
 	if b, err := msgpack.Marshal(m.Stats); err == nil {
 		r.Stats = b
+		return r, nil
+	} else {
+		return nil, err
 	}
-	return r
 }
 
-func newRequestFromRedis(r *requestRedis) *models.Request {
+func newRequestFromRedis(r *requestRedis) (*models.Request, error) {
 	m := &models.Request{}
-	u, _ := url.Parse(r.Url)
+	u, err := url.Parse(r.Url)
+	if err != nil {
+		return nil, err
+	}
+
 	m.Url = u
 	m.Method = r.Method
 	m.Body = r.Body
 	var c []http.Cookie
+
 	if err := msgpack.Unmarshal(r.Cookie, &c); err == nil {
 		m.Cookie = c
 	}
+
 	m.JobStatus = r.JobStatus
 	m.NextRequest = time.Unix(r.NextRequest, 0)
 	m.LastRequest = time.Unix(r.LastRequest, 0)
 	var s map[string]float64
+
 	if err := msgpack.Unmarshal(r.Stats, &s); err == nil {
 		m.Stats = s
 	} else {
 		m.Stats = map[string]float64{}
 	}
 
-	return m
+	return m, nil
 }
