@@ -38,11 +38,18 @@ func (d *downloadService) DoRequest(ctx context.Context, in <-chan *models.Reque
 		req, err := d.constructRequest(request)
 		if err != nil {
 			// request is deleted
+			log.Printf("error constructRequest %v in %s", err, request.Url.String())
 			continue
 		}
 		resp, err := d.clientRepository.Do(req)
+		if err != nil {
+			log.Printf("http request error %v in %s", err, request.Url.String())
+			continue
+		}
 		if response, err := d.constructResponse(resp); err == nil {
 			out <- response
+		} else {
+			log.Printf("error constructResponse %v in %s", err, request.Url.String())
 		}
 	}
 }
