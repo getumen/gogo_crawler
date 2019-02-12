@@ -72,7 +72,7 @@ func NewMySQLConnection(config *config.Config) *gorm.DB {
 	c := config.MySQL
 	password := os.Getenv(c.PasswordEnvKey)
 	connStr := fmt.Sprintf(
-		"%s:%s@%s(%s:%d)/%s?charset=utf8&parseTime=True&loc=Local",
+		"%s:%s@%s(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local",
 		c.Username,
 		password,
 		c.Connection,
