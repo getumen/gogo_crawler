@@ -86,8 +86,10 @@ func (s *scheduleService) ScheduleRequest(ctx context.Context, in <-chan *models
 			}
 
 			if exist {
-				r.NextRequest = time.Now().Add(time.Since(r.LastRequest))
+				log.Printf("Not updated url: %s\n", r.Url.String())
+				r.NextRequest = time.Now().Add(time.Since(r.LastRequest) * 2)
 			} else {
+				log.Printf("updated url: %s\n", r.Url.String())
 
 				s.scheduleRule.UpdateStatsSuccess(r)
 
@@ -98,6 +100,7 @@ func (s *scheduleService) ScheduleRequest(ctx context.Context, in <-chan *models
 
 			}
 		} else {
+			log.Printf("http error %d in %s", resp.StatusCode, resp.Request.URL.String())
 			s.scheduleRule.UpdateStatsFail(r)
 			r.NextRequest = s.scheduleRule.ScheduleNextFail(r)
 		}
@@ -107,8 +110,6 @@ func (s *scheduleService) ScheduleRequest(ctx context.Context, in <-chan *models
 		if err != nil {
 			log.Println(err)
 			continue
-		} else {
-			log.Printf("Schedule request: %s\n", r.Url.String())
 		}
 	}
 }
