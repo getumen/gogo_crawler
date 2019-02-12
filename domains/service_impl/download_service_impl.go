@@ -64,14 +64,7 @@ func (d *downloadService) constructRequest(request *models.Request) (*http.Reque
 
 func (d *downloadService) constructResponse(response *http.Response) (*models.Response, error) {
 
-	defer func() {
-		if err := response.Body.Close(); err != nil {
-			log.Println(err)
-		}
-	}()
-
 	r := &models.Response{}
-	response.Request.URL.Fragment = ""
 
 	r.Request = response.Request
 	r.Cookie = make([]http.Cookie, len(response.Cookies()))
@@ -87,6 +80,9 @@ func (d *downloadService) constructResponse(response *http.Response) (*models.Re
 			log.Println(err)
 		} else {
 			r.Body = b
+			if err := response.Body.Close(); err != nil {
+				log.Println(err)
+			}
 		}
 	}
 
