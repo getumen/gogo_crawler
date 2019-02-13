@@ -47,6 +47,7 @@ func (d *downloadService) DoRequest(ctx context.Context, in <-chan *models.Reque
 			continue
 		}
 		if response, err := d.constructResponse(resp); err == nil {
+			response.Namespace = request.Namespace
 			out <- response
 		} else {
 			log.Printf("error constructResponse %v in %s", err, request.Url.String())

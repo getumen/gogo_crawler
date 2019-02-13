@@ -52,7 +52,7 @@ func (r *requestRedisRepository) IsExist(ctx context.Context, url string) (bool,
 
 func (r *requestRedisRepository) FindAllByDomainAndBeforeTimeOrderByNextRequest(
 	ctx context.Context,
-	domain string,
+	namespace string,
 	now time.Time,
 	offset, limit int) ([]*models.Request, error) {
 	conn, err := r.pool.GetContext(ctx)
@@ -65,12 +65,12 @@ func (r *requestRedisRepository) FindAllByDomainAndBeforeTimeOrderByNextRequest(
 			log.Println(err)
 		}
 	}()
-	urls, err := redis.Strings(conn.Do(ZRANGEBYSCORE, PQ+domain, 0, now.Unix(), "LIMIT", 0, limit))
+	urls, err := redis.Strings(conn.Do(ZRANGEBYSCORE, PQ+namespace, 0, now.Unix(), "LIMIT", 0, limit))
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = conn.Do(ZREM, PQ+domain, urls)
+	_, err = conn.Do(ZREM, PQ+namespace, urls)
 	if err != nil {
 		return nil, err
 	}
@@ -106,6 +106,7 @@ func (r *requestRedisRepository) FindAllByDomainAndBeforeTimeOrderByNextRequest(
 	for _, urlStr := range urls {
 		if v, ok := m.load(urlStr); ok {
 			r, err := newRequestFromRedis(&v)
+			r.Namespace = namespace
 			if err == nil {
 				res = append(res, r)
 			}
@@ -172,7 +173,7 @@ func (r *requestRedisRepository) Save(ctx context.Context, request *models.Reque
 			log.Println(err)
 		}
 	}()
-	_, err = conn.Do(ZADD, PQ+request.Url.Host, request.NextRequest.Unix(), request.Url)
+	_, err = conn.Do(ZADD, PQ+request.Namespace, request.NextRequest.Unix(), request.Url)
 	if err != nil {
 		return err
 	}

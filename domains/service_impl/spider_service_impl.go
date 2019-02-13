@@ -40,6 +40,7 @@ func (s *spiderService) ParseResponse(ctx context.Context, allowedDomainRegexp s
 					req.Cookie = response.Cookie
 					req.Method = "GET"
 					req.LastRequest = time.Now()
+					req.Namespace = response.Namespace
 					out <- req
 				}
 			}
