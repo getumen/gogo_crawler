@@ -38,3 +38,10 @@ type CrawlerConfig struct {
 	HeartBeat            int
 	DownloaderNum        int
 }
+
+type MinioConfig struct {
+	Endpoint        string
+	AccessKeyID     string
+	SecretAccessKey string
+	UseSSL          bool
+}
