@@ -21,6 +21,6 @@ func (*responseMysqlRepository) Save(ctx context.Context, response *models.Respo
 	panic("implement me")
 }
 
-func (*responseMysqlRepository) IsExist(ctx context.Context, response *models.Response) (bool, error) {
+func (r *responseMysqlRepository) IsExist(ctx context.Context, response *models.Response) (bool, error) {
 	panic("implement me")
 }
