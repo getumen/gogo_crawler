@@ -21,6 +21,7 @@ type Request struct {
 	NextRequest time.Time
 	LastRequest time.Time
 	Stats       map[string]float64
+	Namespace   string
 }
 
 type Response struct {
@@ -30,4 +31,5 @@ type Response struct {
 	Request    *http.Request
 	Cookie     []http.Cookie
 	StatusCode int
+	Namespace  string
 }
