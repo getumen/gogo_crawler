@@ -8,7 +8,10 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"os"
+	"os/signal"
 	"sync"
+	"syscall"
 )
 
 type Crawler interface {
@@ -48,17 +51,42 @@ func (c *crawler) ResponseMiddleware(f func(r *http.Response, model *models.Resp
 	c.downloadService.AddResponseMiddleware(f)
 }
 
+var signalChan = make(chan os.Signal, 1)
+
 func (c *crawler) Start(ctx context.Context) {
 	crawlerGroup := &sync.WaitGroup{}
 
 	downloaderNum := c.conf.Crawler.DownloaderNum
+
+	cancelCtx, cancel := context.WithCancel(ctx)
+
+	go func() {
+		cnt := 0
+		signal.Notify(signalChan,
+			syscall.SIGINT)
+		for {
+			s := <-signalChan
+			switch s {
+			case syscall.SIGINT:
+				log.Println("SIGINT")
+				cnt += 1
+				if cnt > 1 {
+					os.Exit(0)
+				} else {
+					cancel()
+				}
+			default:
+				log.Fatalln("Unknown signal.")
+			}
+		}
+	}()
 
 	for _, website := range c.conf.Page {
 		crawlerGroup.Add(1)
 		log.Printf("start crawl: %v\n", website)
 		go func(website config.WebSite) {
 
-			defer crawlerGroup.Done()
+			sinkWaitGroup := &sync.WaitGroup{}
 
 			scheduledReqChan := make(chan *models.Request)
 
@@ -67,7 +95,7 @@ func (c *crawler) Start(ctx context.Context) {
 			wg := &sync.WaitGroup{}
 			wg.Add(downloaderNum)
 			for i := 0; i < downloaderNum; i++ {
-				go c.downloadService.DoRequest(ctx, scheduledReqChan, downloadRespChan, wg)
+				go c.downloadService.DoRequest(cancelCtx, scheduledReqChan, downloadRespChan, wg)
 			}
 			go func() {
 				wg.Wait()
@@ -80,15 +108,25 @@ func (c *crawler) Start(ctx context.Context) {
 
 			go distributeResponse(downloadRespChan, scheduledRespChan, itemRespChan, spiderRespChan)
 
-			go c.scheduleService.ScheduleRequest(ctx, scheduledRespChan)
-
-			go c.itemService.SaveResponse(ctx, itemRespChan)
+			go func() {
+				sinkWaitGroup.Add(1)
+				c.scheduleService.ScheduleRequest(cancelCtx, scheduledRespChan)
+				sinkWaitGroup.Done()
+			}()
+			go func() {
+				sinkWaitGroup.Add(1)
+				c.itemService.SaveResponse(cancelCtx, itemRespChan)
+				sinkWaitGroup.Done()
+			}()
 
 			scheduleReqChan := make(chan *models.Request)
-			go c.spiderService.ParseResponse(ctx, website.AllowedDomain, spiderRespChan, scheduleReqChan)
+			go c.spiderService.ParseResponse(cancelCtx, website.AllowedDomain, spiderRespChan, scheduleReqChan)
 
-			go c.scheduleService.ScheduleNewRequest(ctx, scheduleReqChan)
-
+			go func() {
+				sinkWaitGroup.Add(1)
+				c.scheduleService.ScheduleNewRequest(cancelCtx, scheduleReqChan)
+				sinkWaitGroup.Done()
+			}()
 			u, err := url.Parse(website.StartPage)
 			if err == nil {
 				scheduledReqChan <- &models.Request{
@@ -98,7 +136,11 @@ func (c *crawler) Start(ctx context.Context) {
 				}
 			}
 
-			c.scheduleService.GenerateRequest(ctx, website.Domain, scheduledReqChan)
+			go c.scheduleService.GenerateRequest(cancelCtx, website.Domain, scheduledReqChan)
+
+			sinkWaitGroup.Wait()
+			crawlerGroup.Done()
+
 		}(website)
 	}
 
