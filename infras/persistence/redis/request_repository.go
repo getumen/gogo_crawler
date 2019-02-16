@@ -107,6 +107,7 @@ func (r *requestRedisRepository) FindAllByDomainAndBeforeTimeOrderByNextRequest(
 	for _, urlStr := range urls {
 		if v, ok := m.load(urlStr); ok {
 			r, err := newRequestFromRedis(&v)
+			r.Namespace = namespace
 			if err == nil {
 				res = append(res, r)
 			}
@@ -173,7 +174,7 @@ func (r *requestRedisRepository) Save(ctx context.Context, request *models.Reque
 			log.Println(err)
 		}
 	}()
-	_, err = conn.Do(ZADD, PQ+request.Url.Host, request.NextRequest.Unix(), request.Url)
+	_, err = conn.Do(ZADD, PQ+request.Namespace, request.NextRequest.Unix(), request.Url)
 	if err != nil {
 		return err
 	}
