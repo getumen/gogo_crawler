@@ -2,6 +2,7 @@ package redis
 
 import (
 	"context"
+	"github.com/PuerkitoBio/purell"
 	"github.com/getumen/gogo_crawler/domains/models"
 	"github.com/getumen/gogo_crawler/domains/repository"
 	"github.com/gomodule/redigo/redis"
@@ -47,7 +48,7 @@ func (r *requestRedisRepository) IsExist(ctx context.Context, url string) (bool,
 			log.Println(err)
 		}
 	}()
-	return redis.Bool(conn.Do(EXISTS, URL+url))
+	return redis.Bool(conn.Do(EXISTS, URL+normalizeURL(url)))
 }
 
 func (r *requestRedisRepository) FindAllByDomainAndBeforeTimeOrderByNextRequest(
@@ -92,7 +93,7 @@ func (r *requestRedisRepository) FindAllByDomainAndBeforeTimeOrderByNextRequest(
 			}()
 			defer wg.Done()
 			var req requestRedis
-			v, err := redis.Values(conn.Do(HGETALL, URL+url))
+			v, err := redis.Values(conn.Do(HGETALL, URL+normalizeURL(url)))
 			if err != nil {
 				return
 			}
@@ -150,7 +151,7 @@ func (r *requestRedisRepository) FindByUrl(ctx context.Context, url string) (*mo
 			log.Println(err)
 		}
 	}()
-	v, err := redis.Values(conn.Do(HGETALL, URL+url))
+	v, err := redis.Values(conn.Do(HGETALL, URL+normalizeURL(url)))
 	if err != nil {
 		return nil, err
 	}
@@ -173,7 +174,7 @@ func (r *requestRedisRepository) Save(ctx context.Context, request *models.Reque
 			log.Println(err)
 		}
 	}()
-	_, err = conn.Do(ZADD, PQ+request.Namespace, request.NextRequest.Unix(), request.Url)
+	_, err = conn.Do(ZADD, PQ+request.Namespace, request.NextRequest.Unix(), normalizeURL(request.Url.String()))
 	if err != nil {
 		return err
 	}
@@ -181,7 +182,7 @@ func (r *requestRedisRepository) Save(ctx context.Context, request *models.Reque
 	if err != nil {
 		return err
 	}
-	_, err = conn.Do(HMSET, redis.Args{}.Add(URL + request.Url.String()).AddFlat(redisRequest)...)
+	_, err = conn.Do(HMSET, redis.Args{}.Add(URL + normalizeURL(request.Url.String())).AddFlat(redisRequest)...)
 	return err
 }
 
@@ -232,4 +233,8 @@ func newRequestFromRedis(r *requestRedis) (*models.Request, error) {
 	}
 
 	return m, nil
+}
+
+func normalizeURL(u string) string {
+	return purell.MustNormalizeURLString(u, purell.FlagsAllNonGreedy)
 }
