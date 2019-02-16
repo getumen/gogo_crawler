@@ -31,7 +31,7 @@ func NewScheduleService(
 		scheduleRule:       scheduleRule}
 }
 
-func (s *scheduleService) GenerateRequest(ctx context.Context, domain string, out chan<- *models.Request) {
+func (s *scheduleService) GenerateRequest(ctx context.Context, namespace string, out chan<- *models.Request) {
 	ticker := time.NewTicker(heartBeat)
 LOOP:
 	for {
@@ -39,7 +39,7 @@ LOOP:
 		case <-ticker.C:
 			requests, err := s.requestRepository.FindAllByDomainAndBeforeTimeOrderByNextRequest(
 				ctx,
-				domain,
+				namespace,
 				time.Now(),
 				0,
 				generateRequestLimit)

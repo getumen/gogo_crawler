@@ -1,6 +1,7 @@
 package redis
 
 type requestRedis struct {
+	Namespace string `redis:"namespace"`
 	Url       string `redis:"url"`
 	Method    string `redis:"method"`
 	Body      string `redis:"body"`

@@ -17,7 +17,7 @@ func TestConstructRequest(t *testing.T) {
 	u, _ := url.Parse("http://example.com")
 	method := "GET"
 
-	input := models.NewRequest(u, method, "")
+	input := models.NewRequest("example.com",u, method, "")
 	expected := http.Request{URL: u, Method: method}
 
 	actual, err := s.constructRequest(input)

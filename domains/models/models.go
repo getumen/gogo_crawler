@@ -1,5 +1,8 @@
 package models
 
+// These are domain model objects
+// thread safe
+
 import (
 	"io/ioutil"
 	"log"
@@ -23,25 +26,31 @@ type Request struct {
 	JobStatus   int
 	NextRequest time.Time
 	LastRequest time.Time
-	status      map[string]float64
-	semaphore   chan struct{}
+	Namespace   string
+
+	status    map[string]float64
+	semaphore chan struct{}
 }
 
 func NewRequest(
+	namespace string,
 	url *url.URL,
 	method, body string) *Request {
 	return &Request{
+		Namespace: namespace,
 		url:       url,
 		Method:    method,
 		Body:      body,
 		status:    map[string]float64{},
-		semaphore: make(chan struct{}),
+		semaphore: make(chan struct{}, 1),
 	}
 }
 
 func (r *Request) UrlString() string {
 	r.semaphore <- struct{}{}
-	defer func() { <-r.semaphore }()
+	defer func() {
+		<-r.semaphore
+	}()
 
 	return r.url.String()
 }
@@ -66,6 +75,14 @@ func (r *Request) GetStats(key string) float64 {
 	return r.status[key]
 }
 
+func (r *Request) GetStatsMap() map[string]float64 {
+	return r.status
+}
+
+func (r *Request) SetStatusMap(m map[string]float64) {
+	r.status = m
+}
+
 func (r *Request) CreateHTTPRequest() *http.Request {
 	req, err := http.NewRequest(r.Method, r.UrlString(), strings.NewReader(r.Body))
 	if err != nil {
@@ -76,6 +93,22 @@ func (r *Request) CreateHTTPRequest() *http.Request {
 	return req
 }
 
+func (r *Request) UrlHost() string {
+	return r.url.Host
+}
+
+func (r *Request) UrlFragment() string {
+	return r.url.Fragment
+}
+
+func (r *Request) UrlPath() string {
+	return r.url.Path
+}
+
+func (r *Request) UrlScheme() string {
+	return r.url.Scheme
+}
+
 type Response struct {
 	Header     http.Header
 	Body       []byte
@@ -83,12 +116,15 @@ type Response struct {
 	request    *http.Request
 	Cookie     []http.Cookie
 	StatusCode int
+	Namespace  string
 	semaphore  chan struct{}
 }
 
-func NewResponse(resp *http.Response) *Response {
+func NewResponse(namespace string, resp *http.Response) *Response {
 	r := &Response{}
 
+	r.semaphore = make(chan struct{}, 1)
+	r.Namespace = namespace
 	r.request = resp.Request
 	r.Cookie = make([]http.Cookie, len(resp.Cookies()))
 	for _, c := range resp.Cookies() {

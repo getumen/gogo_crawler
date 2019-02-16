@@ -7,7 +7,7 @@ import (
 )
 
 type ScheduleService interface {
-	GenerateRequest(ctx context.Context, domain string, out chan<- *models.Request)
+	GenerateRequest(ctx context.Context, namespace string, out chan<- *models.Request)
 	ScheduleRequest(ctx context.Context, in <-chan *models.Response)
 	ScheduleNewRequest(ctx context.Context, in <-chan *models.Request)
 }

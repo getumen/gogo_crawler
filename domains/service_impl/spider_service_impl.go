@@ -40,7 +40,7 @@ func (s *spiderService) ParseResponse(
 						continue // ignore not allowed domain
 					}
 					link.Fragment = ""
-					req := models.NewRequest(link, "GET", "")
+					req := models.NewRequest(response.Namespace, link, "GET", "")
 					req.Cookie = response.Cookie
 					req.Method = "GET"
 					req.LastRequest = time.Now()

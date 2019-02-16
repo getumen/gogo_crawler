@@ -43,7 +43,8 @@ func (d *downloadService) DoRequest(ctx context.Context, in <-chan *models.Reque
 			log.Printf("http request error %v in %s", err, request.UrlString())
 			continue
 		}
-		if response, err := d.constructResponse(resp); err == nil {
+		if response, err := d.constructResponse(request.Namespace, resp); err == nil {
+			response.Namespace = request.Namespace
 			out <- response
 		} else {
 			log.Printf("error constructResponse %v in %s", err, request.UrlString())
@@ -63,9 +64,9 @@ func (d *downloadService) constructRequest(request *models.Request) (*http.Reque
 	return r, nil
 }
 
-func (d *downloadService) constructResponse(response *http.Response) (*models.Response, error) {
+func (d *downloadService) constructResponse(namespace string, response *http.Response) (*models.Response, error) {
 
-	r := models.NewResponse(response)
+	r := models.NewResponse(namespace, response)
 	for _, f := range d.responseMiddleware {
 		f(response, r)
 		if r == nil {

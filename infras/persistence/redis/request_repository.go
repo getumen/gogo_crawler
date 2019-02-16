@@ -2,6 +2,7 @@ package redis
 
 import (
 	"context"
+	"errors"
 	"github.com/getumen/gogo_crawler/domains/models"
 	"github.com/getumen/gogo_crawler/domains/repository"
 	"github.com/gomodule/redigo/redis"
@@ -52,7 +53,7 @@ func (r *requestRedisRepository) IsExist(ctx context.Context, url string) (bool,
 
 func (r *requestRedisRepository) FindAllByDomainAndBeforeTimeOrderByNextRequest(
 	ctx context.Context,
-	domain string,
+	namespace string,
 	now time.Time,
 	offset, limit int) ([]*models.Request, error) {
 	conn, err := r.pool.GetContext(ctx)
@@ -65,12 +66,12 @@ func (r *requestRedisRepository) FindAllByDomainAndBeforeTimeOrderByNextRequest(
 			log.Println(err)
 		}
 	}()
-	urls, err := redis.Strings(conn.Do(ZRANGEBYSCORE, PQ+domain, 0, now.Unix(), "LIMIT", 0, limit))
+	urls, err := redis.Strings(conn.Do(ZRANGEBYSCORE, PQ+namespace, 0, now.Unix(), "LIMIT", 0, limit))
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = conn.Do(ZREM, PQ+domain, urls)
+	_, err = conn.Do(ZREM, PQ+namespace, urls)
 	if err != nil {
 		return nil, err
 	}
@@ -106,16 +107,13 @@ func (r *requestRedisRepository) FindAllByDomainAndBeforeTimeOrderByNextRequest(
 	for _, urlStr := range urls {
 		if v, ok := m.load(urlStr); ok {
 			r, err := newRequestFromRedis(&v)
+			r.Namespace = namespace
 			if err == nil {
 				res = append(res, r)
 			}
 		}
 	}
 	return res, nil
-}
-
-func getAll() {
-
 }
 
 type requestMap struct {
@@ -138,7 +136,11 @@ func (r *requestMap) store(key string, req requestRedis) {
 	r.m.Store(key, req)
 }
 
-func (r *requestRedisRepository) FindByUrl(ctx context.Context, url string) (*models.Request, error) {
+func (r *requestRedisRepository) FindByUrl(ctx context.Context, urlStr string) (*models.Request, error) {
+	if urlStr == "" {
+		return nil, errors.New("url is empty")
+	}
+
 	conn, err := r.pool.GetContext(ctx)
 	if err != nil {
 		return nil, err
@@ -149,7 +151,7 @@ func (r *requestRedisRepository) FindByUrl(ctx context.Context, url string) (*mo
 			log.Println(err)
 		}
 	}()
-	v, err := redis.Values(conn.Do(HGETALL, URL+url))
+	v, err := redis.Values(conn.Do(HGETALL, URL+urlStr))
 	if err != nil {
 		return nil, err
 	}
@@ -158,7 +160,14 @@ func (r *requestRedisRepository) FindByUrl(ctx context.Context, url string) (*mo
 	if err != nil {
 		return nil, err
 	}
-	return newRequestFromRedis(dst)
+	req, err := newRequestFromRedis(dst)
+	if err != nil {
+		return nil, err
+	}
+	if req.UrlString() == "" {
+		return nil, errors.New("url is not found")
+	}
+	return req, nil
 }
 
 func (r *requestRedisRepository) Save(ctx context.Context, request *models.Request) error {
@@ -172,7 +181,7 @@ func (r *requestRedisRepository) Save(ctx context.Context, request *models.Reque
 			log.Println(err)
 		}
 	}()
-	_, err = conn.Do(ZADD, PQ+request.Url.Host, request.NextRequest.Unix(), request.Url)
+	_, err = conn.Do(ZADD, PQ+request.Namespace, request.NextRequest.Unix(), request.UrlString())
 	if err != nil {
 		return err
 	}
@@ -180,13 +189,14 @@ func (r *requestRedisRepository) Save(ctx context.Context, request *models.Reque
 	if err != nil {
 		return err
 	}
-	_, err = conn.Do(HMSET, redis.Args{}.Add(URL + request.Url.String()).AddFlat(redisRequest)...)
+	_, err = conn.Do(HMSET, redis.Args{}.Add(URL + request.UrlString()).AddFlat(redisRequest)...)
 	return err
 }
 
 func newRequestRedis(m *models.Request) (*requestRedis, error) {
 	r := &requestRedis{}
-	r.Url = m.Url.String()
+	r.Namespace = m.Namespace
+	r.Url = m.UrlString()
 	r.Method = m.Method
 	r.Body = m.Body
 	if b, err := msgpack.Marshal(m.Cookie); err == nil {
@@ -195,7 +205,7 @@ func newRequestRedis(m *models.Request) (*requestRedis, error) {
 	r.JobStatus = m.JobStatus
 	r.NextRequest = m.NextRequest.Unix()
 	r.LastRequest = m.LastRequest.Unix()
-	if b, err := msgpack.Marshal(m.Stats); err == nil {
+	if b, err := msgpack.Marshal(m.GetStatsMap()); err == nil {
 		r.Stats = b
 		return r, nil
 	} else {
@@ -204,15 +214,13 @@ func newRequestRedis(m *models.Request) (*requestRedis, error) {
 }
 
 func newRequestFromRedis(r *requestRedis) (*models.Request, error) {
-	m := &models.Request{}
 	u, err := url.Parse(r.Url)
 	if err != nil {
 		return nil, err
 	}
 
-	m.Url = u
-	m.Method = r.Method
-	m.Body = r.Body
+	m := models.NewRequest(r.Namespace, u, r.Method, r.Body)
+
 	var c []http.Cookie
 
 	if err := msgpack.Unmarshal(r.Cookie, &c); err == nil {
@@ -225,9 +233,9 @@ func newRequestFromRedis(r *requestRedis) (*models.Request, error) {
 	var s map[string]float64
 
 	if err := msgpack.Unmarshal(r.Stats, &s); err == nil {
-		m.Stats = s
+		m.SetStatusMap(s)
 	} else {
-		m.Stats = map[string]float64{}
+		m.SetStatusMap(map[string]float64{})
 	}
 
 	return m, nil

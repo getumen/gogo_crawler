@@ -60,9 +60,9 @@ func (c *crawler) Start(ctx context.Context) {
 
 			defer crawlerGroup.Done()
 
-			scheduledReqChan := make(chan *models.Request)
+			scheduledReqChan := make(chan *models.Request, downloaderNum)
 
-			downloadRespChan := make(chan *models.Response)
+			downloadRespChan := make(chan *models.Response, downloaderNum)
 
 			wg := &sync.WaitGroup{}
 			wg.Add(downloaderNum)
@@ -74,9 +74,9 @@ func (c *crawler) Start(ctx context.Context) {
 				close(downloadRespChan)
 			}()
 
-			scheduledRespChan := make(chan *models.Response)
-			itemRespChan := make(chan *models.Response)
-			spiderRespChan := make(chan *models.Response)
+			scheduledRespChan := make(chan *models.Response, downloaderNum)
+			itemRespChan := make(chan *models.Response, downloaderNum)
+			spiderRespChan := make(chan *models.Response, downloaderNum)
 
 			go distributeResponse(downloadRespChan, scheduledRespChan, itemRespChan, spiderRespChan)
 
@@ -84,21 +84,17 @@ func (c *crawler) Start(ctx context.Context) {
 
 			go c.itemService.SaveResponse(ctx, itemRespChan)
 
-			scheduleReqChan := make(chan *models.Request)
+			scheduleReqChan := make(chan *models.Request, downloaderNum)
 			go c.spiderService.ParseResponse(ctx, website.AllowedDomain, spiderRespChan, scheduleReqChan)
 
 			go c.scheduleService.ScheduleNewRequest(ctx, scheduleReqChan)
 
 			u, err := url.Parse(website.StartPage)
 			if err == nil {
-				scheduledReqChan <- &models.Request{
-					Url:    u,
-					Method: "GET",
-					Stats:  map[string]float64{},
-				}
+				scheduledReqChan <- models.NewRequest(website.Namespace, u, "GET", "")
 			}
 
-			c.scheduleService.GenerateRequest(ctx, website.Domain, scheduledReqChan)
+			c.scheduleService.GenerateRequest(ctx, website.Namespace, scheduledReqChan)
 		}(website)
 	}
 
@@ -108,7 +104,7 @@ func (c *crawler) Start(ctx context.Context) {
 func distributeResponse(in <-chan *models.Response, out ...chan<- *models.Response) {
 	for resp := range in {
 		for i := 0; i < len(out); i++ {
-			out[i] <- &models.Response{Header: resp.Header, Body: resp.Body, CreateAt: resp.CreateAt, Request: resp.Request, Cookie: resp.Cookie, StatusCode: resp.StatusCode}
+			out[i] <- resp
 		}
 	}
 	for i := 0; i < len(out); i++ {
