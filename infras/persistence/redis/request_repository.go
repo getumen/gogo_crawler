@@ -2,6 +2,7 @@ package redis
 
 import (
 	"context"
+	"github.com/PuerkitoBio/purell"
 	"github.com/getumen/gogo_crawler/domains/models"
 	"github.com/getumen/gogo_crawler/domains/repository"
 	"github.com/gomodule/redigo/redis"
@@ -47,12 +48,12 @@ func (r *requestRedisRepository) IsExist(ctx context.Context, url string) (bool,
 			log.Println(err)
 		}
 	}()
-	return redis.Bool(conn.Do(EXISTS, URL+url))
+	return redis.Bool(conn.Do(EXISTS, URL+normalizeURL(url)))
 }
 
 func (r *requestRedisRepository) FindAllByDomainAndBeforeTimeOrderByNextRequest(
 	ctx context.Context,
-	domain string,
+	namespace string,
 	now time.Time,
 	offset, limit int) ([]*models.Request, error) {
 	conn, err := r.pool.GetContext(ctx)
@@ -65,12 +66,12 @@ func (r *requestRedisRepository) FindAllByDomainAndBeforeTimeOrderByNextRequest(
 			log.Println(err)
 		}
 	}()
-	urls, err := redis.Strings(conn.Do(ZRANGEBYSCORE, PQ+domain, 0, now.Unix(), "LIMIT", 0, limit))
+	urls, err := redis.Strings(conn.Do(ZRANGEBYSCORE, PQ+namespace, 0, now.Unix(), "LIMIT", 0, limit))
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = conn.Do(ZREM, PQ+domain, urls)
+	_, err = conn.Do(ZREM, PQ+namespace, urls)
 	if err != nil {
 		return nil, err
 	}
@@ -92,7 +93,7 @@ func (r *requestRedisRepository) FindAllByDomainAndBeforeTimeOrderByNextRequest(
 			}()
 			defer wg.Done()
 			var req requestRedis
-			v, err := redis.Values(conn.Do(HGETALL, URL+url))
+			v, err := redis.Values(conn.Do(HGETALL, URL+normalizeURL(url)))
 			if err != nil {
 				return
 			}
@@ -149,7 +150,7 @@ func (r *requestRedisRepository) FindByUrl(ctx context.Context, url string) (*mo
 			log.Println(err)
 		}
 	}()
-	v, err := redis.Values(conn.Do(HGETALL, URL+url))
+	v, err := redis.Values(conn.Do(HGETALL, URL+normalizeURL(url)))
 	if err != nil {
 		return nil, err
 	}
@@ -231,4 +232,8 @@ func newRequestFromRedis(r *requestRedis) (*models.Request, error) {
 	}
 
 	return m, nil
+}
+
+func normalizeURL(u string) string {
+	return purell.MustNormalizeURLString(u, purell.FlagsAllNonGreedy)
 }
