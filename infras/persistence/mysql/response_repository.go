@@ -20,7 +20,7 @@ func NewResponseMysqlRepository(db *gorm.DB) repository.ResponseRepository {
 func newResponseDB(response *models.Response) *responseDB {
 	return &responseDB{
 		hashutils.HashHTMLBody(response.Body),
-		response.Request.URL.String(),
+		response.UrlString(),
 		string(response.Body),
 		makeDate(response.CreateAt),
 	}

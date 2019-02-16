@@ -18,7 +18,11 @@ func NewSpiderService() service.SpiderService {
 	return &spiderService{}
 }
 
-func (s *spiderService) ParseResponse(ctx context.Context, allowedDomainRegexp string, in <-chan *models.Response, out chan<- *models.Request) {
+func (s *spiderService) ParseResponse(
+	ctx context.Context,
+	allowedDomainRegexp string,
+	in <-chan *models.Response,
+	out chan<- *models.Request) {
 	allowedDomain := regexp.MustCompile(allowedDomainRegexp)
 	for response := range in {
 		visitNode := func(n *html.Node) {
@@ -27,7 +31,7 @@ func (s *spiderService) ParseResponse(ctx context.Context, allowedDomainRegexp s
 					if a.Key != "href" {
 						continue
 					}
-					link, err := response.Request.URL.Parse(a.Val)
+					link, err := response.UrlParse(a.Val)
 					if err != nil {
 						log.Printf("html parse error\n")
 						continue // ignore bad URLs
@@ -36,7 +40,7 @@ func (s *spiderService) ParseResponse(ctx context.Context, allowedDomainRegexp s
 						continue // ignore not allowed domain
 					}
 					link.Fragment = ""
-					req := &models.Request{Url: link}
+					req := models.NewRequest(link, "GET", "")
 					req.Cookie = response.Cookie
 					req.Method = "GET"
 					req.LastRequest = time.Now()

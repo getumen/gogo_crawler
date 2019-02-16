@@ -71,7 +71,7 @@ LOOP:
 func (s *scheduleService) ScheduleRequest(ctx context.Context, in <-chan *models.Response) {
 	for resp := range in {
 
-		r, err := s.requestRepository.FindByUrl(ctx, resp.Request.URL.String())
+		r, err := s.requestRepository.FindByUrl(ctx, resp.UrlString())
 		if err != nil {
 			log.Println(err)
 			continue
@@ -86,10 +86,10 @@ func (s *scheduleService) ScheduleRequest(ctx context.Context, in <-chan *models
 			}
 
 			if exist {
-				log.Printf("Not updated url: %s\n", r.Url.String())
+				log.Printf("Not updated url: %s\n", r.UrlString())
 				r.NextRequest = time.Now().Add(time.Since(r.LastRequest) * 2)
 			} else {
-				log.Printf("updated url: %s\n", r.Url.String())
+				log.Printf("updated url: %s\n", r.UrlString())
 
 				s.scheduleRule.UpdateStatsSuccess(r)
 
@@ -100,7 +100,7 @@ func (s *scheduleService) ScheduleRequest(ctx context.Context, in <-chan *models
 
 			}
 		} else {
-			log.Printf("http error %d in %s", resp.StatusCode, resp.Request.URL.String())
+			log.Printf("http error %d in %s", resp.StatusCode, resp.UrlString())
 			s.scheduleRule.UpdateStatsFail(r)
 			r.NextRequest = s.scheduleRule.ScheduleNextFail(r)
 		}
@@ -116,23 +116,22 @@ func (s *scheduleService) ScheduleRequest(ctx context.Context, in <-chan *models
 
 func (s *scheduleService) ScheduleNewRequest(ctx context.Context, in <-chan *models.Request) {
 	for request := range in {
-		exist, err := s.requestRepository.IsExist(ctx, request.Url.String())
+		exist, err := s.requestRepository.IsExist(ctx, request.UrlString())
 		if err != nil {
 			log.Println(err)
 			continue
 		}
 		if !exist {
 			request.NextRequest = request.LastRequest.Add(time.Duration(1) * time.Minute)
-			request.Stats = map[string]float64{}
-			request.Stats["AccessCount"] = 1
-			request.Stats["AccessSuccess"] = 1
-			request.Stats["IntervalSum"] = 0
+			request.SetStats("AccessCount", 1)
+			request.SetStats("AccessSuccess", 1)
+			request.SetStats("IntervalSum", 0)
 			err = s.requestRepository.Save(ctx, request)
 			if err != nil {
 				log.Println(err)
 				continue
 			} else {
-				log.Printf("Schedule new request: %s\n", request.Url.String())
+				log.Printf("Schedule new request: %s\n", request.UrlString())
 			}
 		}
 	}
@@ -155,9 +154,9 @@ func (poissonProcessRule) ScheduleNextSuccess(r *models.Request) time.Time {
 		math.Max(
 			math.Ceil(
 				gammaSampling(
-					r.Stats["AccessSuccess"],
-					r.Stats["IntervalSum"])),
-			r.Stats["IntervalSum"]/r.Stats["AccessSuccess"])) * time.Second
+					r.GetStats("AccessSuccess"),
+					r.GetStats("IntervalSum"))),
+			r.GetStats("IntervalSum")/r.GetStats("AccessSuccess"))) * time.Second
 	return time.Now().Add(du)
 }
 
@@ -167,11 +166,11 @@ func (poissonProcessRule) ScheduleNextFail(r *models.Request) time.Time {
 }
 
 func (poissonProcessRule) UpdateStatsFail(r *models.Request) {
-	r.Stats["AccessCount"]++
+	r.SetStats("AccessCount", r.GetStats("AccessCount")+1)
 }
 
 func (poissonProcessRule) UpdateStatsSuccess(r *models.Request) {
-	r.Stats["AccessCount"]++
-	r.Stats["AccessSuccess"]++
-	r.Stats["IntervalSum"] += time.Since(r.LastRequest).Seconds()
+	r.SetStats("AccessCount", r.GetStats("AccessCount")+1)
+	r.SetStats("AccessSuccess", r.GetStats("AccessSuccess")+1)
+	r.SetStats("IntervalSum", r.GetStats("IntervalSum")+time.Since(r.LastRequest).Seconds())
 }
