@@ -174,7 +174,7 @@ func (r *requestRedisRepository) Save(ctx context.Context, request *models.Reque
 			log.Println(err)
 		}
 	}()
-	_, err = conn.Do(ZADD, PQ+request.Namespace, request.NextRequest.Unix(), request.Url)
+	_, err = conn.Do(ZADD, PQ+request.Namespace, request.NextRequest.Unix(), normalizeURL(request.Url.String()))
 	if err != nil {
 		return err
 	}
@@ -182,7 +182,7 @@ func (r *requestRedisRepository) Save(ctx context.Context, request *models.Reque
 	if err != nil {
 		return err
 	}
-	_, err = conn.Do(HMSET, redis.Args{}.Add(URL + request.Url.String()).AddFlat(redisRequest)...)
+	_, err = conn.Do(HMSET, redis.Args{}.Add(URL + normalizeURL(request.Url.String())).AddFlat(redisRequest)...)
 	return err
 }
 
