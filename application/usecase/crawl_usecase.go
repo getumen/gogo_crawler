@@ -130,13 +130,14 @@ func (c *crawler) Start(ctx context.Context) {
 			u, err := url.Parse(website.StartPage)
 			if err == nil {
 				scheduledReqChan <- &models.Request{
-					Url:    u,
-					Method: "GET",
-					Stats:  map[string]float64{},
+					Url:       u,
+					Method:    "GET",
+					Stats:     map[string]float64{},
+					Namespace: website.Namespace,
 				}
 			}
 
-			go c.scheduleService.GenerateRequest(cancelCtx, website.Domain, scheduledReqChan)
+			go c.scheduleService.GenerateRequest(cancelCtx, website.Namespace, scheduledReqChan)
 
 			sinkWaitGroup.Wait()
 			crawlerGroup.Done()
@@ -150,7 +151,15 @@ func (c *crawler) Start(ctx context.Context) {
 func distributeResponse(in <-chan *models.Response, out ...chan<- *models.Response) {
 	for resp := range in {
 		for i := 0; i < len(out); i++ {
-			out[i] <- &models.Response{Header: resp.Header, Body: resp.Body, CreateAt: resp.CreateAt, Request: resp.Request, Cookie: resp.Cookie, StatusCode: resp.StatusCode}
+			out[i] <- &models.Response{
+				Header:     resp.Header,
+				Body:       resp.Body,
+				CreateAt:   resp.CreateAt,
+				Request:    resp.Request,
+				Cookie:     resp.Cookie,
+				StatusCode: resp.StatusCode,
+				Namespace:  resp.Namespace,
+			}
 		}
 	}
 	for i := 0; i < len(out); i++ {

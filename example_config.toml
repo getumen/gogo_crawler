@@ -15,13 +15,13 @@ connection = "tcp"
 proxyUrl = ""
 
 [[webSites]]
-domain = "example.com"
+namespace = "example.com"
 startPage = "http://example.com/"
 allowedDomain = "example.com$"
 crawlerNum = 10
 
 [[webSites]]
-domain = "golang.org"
+namespace = "golang.org"
 startPage = "https://golang.org/"
 allowedDomain = "golang.org$"
 crawlerNum = 10

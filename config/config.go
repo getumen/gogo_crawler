@@ -28,7 +28,7 @@ type HttpConfig struct {
 }
 
 type WebSite struct {
-	Domain        string
+	Namespace        string
 	StartPage     string
 	AllowedDomain string
 }

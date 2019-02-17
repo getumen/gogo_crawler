@@ -50,12 +50,6 @@ LOOP:
 			}
 			log.Printf("Scheduling %d request\n", len(requests))
 			for _, request := range requests {
-				request.JobStatus = models.Running
-				err = s.requestRepository.Save(ctx, request)
-				if err != nil {
-					log.Printf("Fail to construct request: %v", request)
-				}
-
 				out <- request
 			}
 		case <-ctx.Done():
@@ -105,7 +99,7 @@ func (s *scheduleService) ScheduleRequest(ctx context.Context, in <-chan *models
 			r.NextRequest = s.scheduleRule.ScheduleNextFail(r)
 		}
 
-		r.JobStatus = models.Complete
+		r.Namespace = resp.Namespace
 		err = s.requestRepository.Save(ctx, r)
 		if err != nil {
 			log.Println(err)
