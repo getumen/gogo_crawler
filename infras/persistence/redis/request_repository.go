@@ -80,7 +80,7 @@ func (r *requestRedisRepository) FindAllByDomainAndBeforeTimeOrderByNextRequest(
 	var wg sync.WaitGroup
 	wg.Add(len(urls))
 	for _, urlStr := range urls {
-		go func(url string) {
+		go func(urlStr string) {
 			conn, err := r.pool.GetContext(ctx)
 			if err != nil {
 				return
@@ -91,14 +91,15 @@ func (r *requestRedisRepository) FindAllByDomainAndBeforeTimeOrderByNextRequest(
 					log.Println(err)
 				}
 			}()
+
 			defer wg.Done()
 			var req requestRedis
-			v, err := redis.Values(conn.Do(HGETALL, URL+normalizeURL(url)))
+			v, err := redis.Values(conn.Do(HGETALL, URL+normalizeURL(urlStr)))
 			if err != nil {
 				return
 			}
 			if err = redis.ScanStruct(v, &req); err == nil {
-				m.store(url, req)
+				m.store(urlStr, req)
 			}
 		}(urlStr)
 	}
