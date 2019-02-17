@@ -6,6 +6,7 @@ import (
 	"github.com/getumen/gogo_crawler/domains/models"
 	"github.com/getumen/gogo_crawler/domains/repository"
 	"github.com/getumen/gogo_crawler/domains/service"
+	"github.com/getumen/gogo_crawler/middleware"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -15,21 +16,11 @@ import (
 )
 
 type downloadService struct {
-	clientRepository   repository.HttpClientRepository
-	requestMiddleware  []func(r *http.Request, model *models.Request)
-	responseMiddleware []func(r *http.Response, model *models.Response)
+	clientRepository repository.HttpClientRepository
 }
 
 func NewDownloadService(clientRepository repository.HttpClientRepository) service.DownloadService {
 	return &downloadService{clientRepository: clientRepository}
-}
-
-func (d *downloadService) AddRequestMiddleware(f func(r *http.Request, model *models.Request)) {
-	d.requestMiddleware = append(d.requestMiddleware, f)
-}
-
-func (d *downloadService) AddResponseMiddleware(f func(r *http.Response, model *models.Response)) {
-	d.responseMiddleware = append(d.responseMiddleware, f)
 }
 
 func (d *downloadService) DoRequest(ctx context.Context, in <-chan *models.Request, out chan<- *models.Response, wg *sync.WaitGroup) {
@@ -60,7 +51,7 @@ func (d *downloadService) constructRequest(request *models.Request) (*http.Reque
 	if err != nil {
 		return nil, err
 	}
-	for _, f := range d.requestMiddleware {
+	for _, f := range middleware.RequestMiddleware {
 		f(r, request)
 		if r == nil {
 			return nil, errors.New("delete request")
@@ -94,7 +85,7 @@ func (d *downloadService) constructResponse(response *http.Response) (*models.Re
 		}
 	}
 
-	for _, f := range d.responseMiddleware {
+	for _, f := range middleware.ResponseMiddleware {
 		f(response, r)
 		if r == nil {
 			return nil, errors.New("delete response")

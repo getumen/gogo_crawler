@@ -117,10 +117,6 @@ func (r *requestRedisRepository) FindAllByDomainAndBeforeTimeOrderByNextRequest(
 	return res, nil
 }
 
-func getAll() {
-
-}
-
 type requestMap struct {
 	m *sync.Map
 }

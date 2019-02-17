@@ -6,7 +6,6 @@ import (
 	"github.com/getumen/gogo_crawler/domains/models"
 	"github.com/getumen/gogo_crawler/domains/service"
 	"log"
-	"net/http"
 	"net/url"
 	"os"
 	"os/signal"
@@ -16,8 +15,6 @@ import (
 
 type Crawler interface {
 	Start(ctx context.Context)
-	RequestMiddleware(f func(r *http.Request, model *models.Request))
-	ResponseMiddleware(f func(r *http.Response, model *models.Response))
 }
 
 type crawler struct {
@@ -41,14 +38,6 @@ func NewCrawler(
 		spiderService:   spiderService,
 		itemService:     itemService,
 	}
-}
-
-func (c *crawler) RequestMiddleware(f func(r *http.Request, model *models.Request)) {
-	c.downloadService.AddRequestMiddleware(f)
-}
-
-func (c *crawler) ResponseMiddleware(f func(r *http.Response, model *models.Response)) {
-	c.downloadService.AddResponseMiddleware(f)
 }
 
 var signalChan = make(chan os.Signal, 1)
