@@ -3,7 +3,7 @@ package redis
 type requestRedis struct {
 	Url       string `redis:"url"`
 	Method    string `redis:"method"`
-	Body      string `redis:"body"`
+	Body      []byte `redis:"body"`
 	Cookie    []byte `redis:"cookie"`
 	JobStatus int    `redis:"job_status"`
 	// UnixTime

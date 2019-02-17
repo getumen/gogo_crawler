@@ -7,10 +7,8 @@ import (
 	"github.com/getumen/gogo_crawler/domains/repository"
 	"github.com/getumen/gogo_crawler/domains/service"
 	"github.com/getumen/gogo_crawler/middleware"
-	"io/ioutil"
 	"log"
 	"net/http"
-	"strings"
 	"sync"
 	"time"
 )
@@ -29,25 +27,25 @@ func (d *downloadService) DoRequest(ctx context.Context, in <-chan *models.Reque
 		req, err := d.constructRequest(request)
 		if err != nil {
 			// request is deleted
-			log.Printf("error constructRequest %v in %s", err, request.Url.String())
+			log.Printf("error constructRequest %v in %s", err, request.UrlString())
 			continue
 		}
 		resp, err := d.clientRepository.Do(req)
 		if err != nil {
-			log.Printf("http request error %v in %s", err, request.Url.String())
+			log.Printf("http request error %v in %s", err, request.UrlString())
 			continue
 		}
 		if response, err := d.constructResponse(resp); err == nil {
-			response.Namespace = request.Namespace
+			response.SetNamespace(request.Namespace())
 			out <- response
 		} else {
-			log.Printf("error constructResponse %v in %s", err, request.Url.String())
+			log.Printf("error constructResponse %v in %s", err, request.UrlString())
 		}
 	}
 }
 
 func (d *downloadService) constructRequest(request *models.Request) (*http.Request, error) {
-	r, err := http.NewRequest(request.Method, request.Url.String(), strings.NewReader(request.Body))
+	r, err := request.HttpRequest()
 	if err != nil {
 		return nil, err
 	}
@@ -63,27 +61,11 @@ func (d *downloadService) constructRequest(request *models.Request) (*http.Reque
 
 func (d *downloadService) constructResponse(response *http.Response) (*models.Response, error) {
 
-	r := &models.Response{}
-
-	r.Request = response.Request
-	r.Cookie = make([]http.Cookie, len(response.Cookies()))
-	for _, c := range response.Cookies() {
-		r.Cookie = append(r.Cookie, *c)
+	r, err := models.NewResponseFromHTTP(response)
+	if err != nil {
+		return nil, err
 	}
-	r.StatusCode = response.StatusCode
-	r.CreateAt = time.Now()
-
-	if response.StatusCode == http.StatusOK {
-		b, err := ioutil.ReadAll(response.Body)
-		if err != nil {
-			log.Println(err)
-		} else {
-			r.Body = b
-			if err := response.Body.Close(); err != nil {
-				log.Println(err)
-			}
-		}
-	}
+	r.SetCreateAt(time.Now())
 
 	for _, f := range middleware.ResponseMiddleware {
 		f(response, r)

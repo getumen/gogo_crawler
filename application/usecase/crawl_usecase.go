@@ -118,12 +118,9 @@ func (c *crawler) Start(ctx context.Context) {
 			}()
 			u, err := url.Parse(website.StartPage)
 			if err == nil {
-				scheduledReqChan <- &models.Request{
-					Url:       u,
-					Method:    "GET",
-					Stats:     map[string]float64{},
-					Namespace: website.Namespace,
-				}
+				req := models.NewRequest(u, "GET", nil)
+				req.SetNamespace(website.Namespace)
+				scheduledReqChan <- req
 			}
 
 			go c.scheduleService.GenerateRequest(cancelCtx, website.Namespace, scheduledReqChan)
@@ -140,15 +137,8 @@ func (c *crawler) Start(ctx context.Context) {
 func distributeResponse(in <-chan *models.Response, out ...chan<- *models.Response) {
 	for resp := range in {
 		for i := 0; i < len(out); i++ {
-			out[i] <- &models.Response{
-				Header:     resp.Header,
-				Body:       resp.Body,
-				CreateAt:   resp.CreateAt,
-				Request:    resp.Request,
-				Cookie:     resp.Cookie,
-				StatusCode: resp.StatusCode,
-				Namespace:  resp.Namespace,
-			}
+			response := resp
+			out[i] <- response
 		}
 	}
 	for i := 0; i < len(out); i++ {

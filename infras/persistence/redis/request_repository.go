@@ -108,7 +108,7 @@ func (r *requestRedisRepository) FindAllByDomainAndBeforeTimeOrderByNextRequest(
 	for _, urlStr := range urls {
 		if v, ok := m.load(urlStr); ok {
 			r, err := newRequestFromRedis(&v)
-			r.Namespace = namespace
+			r.SetNamespace(namespace)
 			if err == nil {
 				res = append(res, r)
 			}
@@ -171,7 +171,7 @@ func (r *requestRedisRepository) Save(ctx context.Context, request *models.Reque
 			log.Println(err)
 		}
 	}()
-	_, err = conn.Do(ZADD, PQ+request.Namespace, request.NextRequest.Unix(), normalizeURL(request.Url.String()))
+	_, err = conn.Do(ZADD, PQ+request.Namespace(), request.NextRequest().Unix(), normalizeURL(request.UrlString()))
 	if err != nil {
 		return err
 	}
@@ -179,22 +179,22 @@ func (r *requestRedisRepository) Save(ctx context.Context, request *models.Reque
 	if err != nil {
 		return err
 	}
-	_, err = conn.Do(HMSET, redis.Args{}.Add(URL + normalizeURL(request.Url.String())).AddFlat(redisRequest)...)
+	_, err = conn.Do(HMSET, redis.Args{}.Add(URL + normalizeURL(request.UrlString())).AddFlat(redisRequest)...)
 	return err
 }
 
 func newRequestRedis(m *models.Request) (*requestRedis, error) {
 	r := &requestRedis{}
-	r.Url = m.Url.String()
-	r.Method = m.Method
-	r.Body = m.Body
-	if b, err := msgpack.Marshal(m.Cookie); err == nil {
+	r.Url = m.UrlString()
+	r.Method = m.Method()
+	r.Body = m.Body()
+	if b, err := msgpack.Marshal(m.Cookies()); err == nil {
 		r.Cookie = b
 	}
-	r.JobStatus = m.JobStatus
-	r.NextRequest = m.NextRequest.Unix()
-	r.LastRequest = m.LastRequest.Unix()
-	if b, err := msgpack.Marshal(m.Stats); err == nil {
+	r.JobStatus = m.JobStatus()
+	r.NextRequest = m.NextRequest().Unix()
+	r.LastRequest = m.LastRequest().Unix()
+	if b, err := msgpack.Marshal(m.StatsMap()); err == nil {
 		r.Stats = b
 		return r, nil
 	} else {
@@ -203,30 +203,25 @@ func newRequestRedis(m *models.Request) (*requestRedis, error) {
 }
 
 func newRequestFromRedis(r *requestRedis) (*models.Request, error) {
-	m := &models.Request{}
 	u, err := url.Parse(r.Url)
 	if err != nil {
 		return nil, err
 	}
 
-	m.Url = u
-	m.Method = r.Method
-	m.Body = r.Body
-	var c []http.Cookie
+	m := models.NewRequest(u, r.Method, r.Body)
+	var c []*http.Cookie
 
 	if err := msgpack.Unmarshal(r.Cookie, &c); err == nil {
-		m.Cookie = c
+		m.SetCookies(c)
 	}
 
-	m.JobStatus = r.JobStatus
-	m.NextRequest = time.Unix(r.NextRequest, 0)
-	m.LastRequest = time.Unix(r.LastRequest, 0)
+	m.SetJobStatus(r.JobStatus)
+	m.SetNextRequest(time.Unix(r.NextRequest, 0))
+	m.SetLastRequest(time.Unix(r.LastRequest, 0))
 	var s map[string]float64
 
 	if err := msgpack.Unmarshal(r.Stats, &s); err == nil {
-		m.Stats = s
-	} else {
-		m.Stats = map[string]float64{}
+		m.SetStatsMap(s)
 	}
 
 	return m, nil

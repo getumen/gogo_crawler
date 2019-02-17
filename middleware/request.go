@@ -12,8 +12,8 @@ func init() {
 }
 
 func addCookie(r *http.Request, model *models.Request) {
-	for _, c := range model.Cookie {
-		r.AddCookie(&c)
+	for _, c := range model.Cookies() {
+		r.AddCookie(c)
 	}
 }
 
@@ -26,7 +26,7 @@ func addHeader(r *http.Request, model *models.Request) {
 	headers["Accept"] = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8"
 	headers["Accept-Language"] = "ja-JP,ja;q=0.9,en-US;q=0.8,en;q=0.7"
 	headers["Cache-Control"] = "max-age=0"
-	headers["Host"] = model.Url.Host
+	headers["Host"] = model.UrlHost()
 
 	for k, v := range headers {
 		r.Header.Set(k, v)
