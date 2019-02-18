@@ -27,7 +27,7 @@ func (s *spiderService) ParseResponse(ctx context.Context, allowedDomainRegexp s
 					if a.Key != "href" {
 						continue
 					}
-					link, err := response.Request.URL.Parse(a.Val)
+					link, err := response.UrlParse(a.Val)
 					if err != nil {
 						log.Printf("html parse error\n")
 						continue // ignore bad URLs
@@ -36,16 +36,15 @@ func (s *spiderService) ParseResponse(ctx context.Context, allowedDomainRegexp s
 						continue // ignore not allowed domain
 					}
 					link.Fragment = ""
-					req := &models.Request{Url: link}
-					req.Cookie = response.Cookie
-					req.Method = "GET"
-					req.LastRequest = time.Now()
-					req.Namespace = response.Namespace
+					req := models.NewRequest(link, "GET", nil)
+					req.SetCookies(response.Cookies())
+					req.SetLastRequest(time.Now())
+					req.SetNamespace(response.Namespace())
 					out <- req
 				}
 			}
 		}
-		buf := bytes.NewBuffer(response.Body)
+		buf := bytes.NewBuffer(response.Body())
 		doc, err := html.Parse(buf)
 		if err != nil {
 			log.Println(err)

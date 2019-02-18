@@ -36,13 +36,13 @@ func (m *MockScheduleService) EXPECT() *MockScheduleServiceMockRecorder {
 }
 
 // GenerateRequest mocks base method
-func (m *MockScheduleService) GenerateRequest(ctx context.Context, domain string, out chan<- *models.Request) {
-	m.ctrl.Call(m, "GenerateRequest", ctx, domain, out)
+func (m *MockScheduleService) GenerateRequest(ctx context.Context, namespace string, out chan<- *models.Request) {
+	m.ctrl.Call(m, "GenerateRequest", ctx, namespace, out)
 }
 
 // GenerateRequest indicates an expected call of GenerateRequest
-func (mr *MockScheduleServiceMockRecorder) GenerateRequest(ctx, domain, out interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateRequest", reflect.TypeOf((*MockScheduleService)(nil).GenerateRequest), ctx, domain, out)
+func (mr *MockScheduleServiceMockRecorder) GenerateRequest(ctx, namespace, out interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateRequest", reflect.TypeOf((*MockScheduleService)(nil).GenerateRequest), ctx, namespace, out)
 }
 
 // ScheduleRequest mocks base method

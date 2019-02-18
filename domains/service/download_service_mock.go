@@ -8,7 +8,6 @@ import (
 	context "context"
 	models "github.com/getumen/gogo_crawler/domains/models"
 	gomock "github.com/golang/mock/gomock"
-	http "net/http"
 	reflect "reflect"
 	sync "sync"
 )
@@ -44,24 +43,4 @@ func (m *MockDownloadService) DoRequest(ctx context.Context, in <-chan *models.R
 // DoRequest indicates an expected call of DoRequest
 func (mr *MockDownloadServiceMockRecorder) DoRequest(ctx, in, out, wg interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DoRequest", reflect.TypeOf((*MockDownloadService)(nil).DoRequest), ctx, in, out, wg)
-}
-
-// AddRequestMiddleware mocks base method
-func (m *MockDownloadService) AddRequestMiddleware(f func(*http.Request, *models.Request) *http.Request) {
-	m.ctrl.Call(m, "AddRequestMiddleware", f)
-}
-
-// AddRequestMiddleware indicates an expected call of AddRequestMiddleware
-func (mr *MockDownloadServiceMockRecorder) AddRequestMiddleware(f interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddRequestMiddleware", reflect.TypeOf((*MockDownloadService)(nil).AddRequestMiddleware), f)
-}
-
-// AddResponseMiddleware mocks base method
-func (m *MockDownloadService) AddResponseMiddleware(f func(*http.Response, *models.Response) *models.Response) {
-	m.ctrl.Call(m, "AddResponseMiddleware", f)
-}
-
-// AddResponseMiddleware indicates an expected call of AddResponseMiddleware
-func (mr *MockDownloadServiceMockRecorder) AddResponseMiddleware(f interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddResponseMiddleware", reflect.TypeOf((*MockDownloadService)(nil).AddResponseMiddleware), f)
 }
