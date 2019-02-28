@@ -1,11 +1,10 @@
 package config
 
 type Config struct {
-	MySQL   MySQLConfig
-	Redis   RedisConfig
-	Http    HttpConfig
-	Page    []WebSite
-	Crawler CrawlerConfig
+	MySQL MySQLConfig
+	Redis RedisConfig
+	Http  HttpConfig
+	Page  []WebSite
 }
 
 type MySQLConfig struct {
@@ -28,13 +27,8 @@ type HttpConfig struct {
 }
 
 type WebSite struct {
-	Namespace        string
+	Namespace     string
 	StartPage     string
 	AllowedDomain string
-}
-
-type CrawlerConfig struct {
-	GenerateRequestLimit int
-	HeartBeat            int
-	DownloaderNum        int
+	DownloaderNum int
 }

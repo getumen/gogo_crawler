@@ -19,11 +19,8 @@ func InitializeCrawler(config *config.Config, db *gorm.DB, redisConn *redis.Pool
 		http.NewHttpClientRepository,
 		mysql.NewResponseMysqlRepository,
 		redisRepo.NewRequestRedisRepository,
-		service_impl.NewDownloadService,
-		service_impl.NewItemService,
 		service_impl.NewPoissonProcessRule,
-		service_impl.NewScheduleService,
-		service_impl.NewSpiderService,
+		service_impl.NewCrawlerService,
 		usecase.NewCrawler,
 	)
 	return nil, nil

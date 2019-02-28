@@ -5,6 +5,6 @@ import (
 	"github.com/getumen/gogo_crawler/domains/models"
 )
 
-type ItemService interface {
-	SaveResponse(ctx context.Context, in <-chan *models.Response)
+type CrawlerService interface {
+	CrawlPage(ctx context.Context, website *models.WebSite)
 }
