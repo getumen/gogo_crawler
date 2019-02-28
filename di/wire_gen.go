@@ -19,14 +19,11 @@ import (
 // Injectors from wire.go:
 
 func InitializeCrawler(config2 *config.Config, db *gorm.DB, redisConn *redis.Pool) (usecase.Crawler, error) {
+	httpClientRepository := http.NewHttpClientRepository(config2)
 	requestRepository := redis2.NewRequestRedisRepository(redisConn)
 	responseRepository := mysql.NewResponseMysqlRepository(db)
 	scheduleRule := service_impl.NewPoissonProcessRule()
-	scheduleService := service_impl.NewScheduleService(requestRepository, responseRepository, scheduleRule)
-	httpClientRepository := http.NewHttpClientRepository(config2)
-	downloadService := service_impl.NewDownloadService(httpClientRepository)
-	spiderService := service_impl.NewSpiderService()
-	itemService := service_impl.NewItemService(responseRepository)
-	crawler := usecase.NewCrawler(config2, scheduleService, downloadService, spiderService, itemService)
+	crawlerService := service_impl.NewCrawlerService(httpClientRepository, requestRepository, responseRepository, scheduleRule)
+	crawler := usecase.NewCrawler(crawlerService)
 	return crawler, nil
 }

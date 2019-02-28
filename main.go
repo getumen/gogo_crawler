@@ -13,6 +13,8 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 )
 
@@ -65,7 +67,31 @@ func main() {
 
 	ctx := context.Background()
 
-	crawler.Start(ctx)
+	ctx, cancel := context.WithCancel(ctx)
+
+	var signalChan = make(chan os.Signal, 1)
+	go func() {
+		cnt := 0
+		signal.Notify(signalChan,
+			syscall.SIGINT)
+		for {
+			s := <-signalChan
+			switch s {
+			case syscall.SIGINT:
+				log.Println("SIGINT")
+				cnt += 1
+				if cnt > 1 {
+					os.Exit(0)
+				} else {
+					cancel()
+				}
+			default:
+				log.Fatalln("Unknown signal.")
+			}
+		}
+	}()
+
+	crawler.Start(ctx, &conf)
 }
 
 func NewMySQLConnection(config *config.Config) *gorm.DB {
