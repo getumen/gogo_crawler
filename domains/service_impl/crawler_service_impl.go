@@ -61,7 +61,6 @@ func (c *crawlerService) CrawlPage(ctx context.Context, website *models.WebSite)
 		req.SetNamespace(website.Namespace)
 		newRequestPipeline <- req
 	}
-
 	for range out {
 	}
 }
@@ -272,7 +271,6 @@ func (c *crawlerService) scheduleNewRequest(ctx context.Context, in <-chan *mode
 				}
 			}
 		}
-
 	}()
 
 	return out
@@ -369,7 +367,7 @@ func funIn(channels ...<-chan interface{}) chan interface{} {
 	}
 
 	go func() {
-		wg.Done()
+		wg.Wait()
 		close(multiplexedStream)
 	}()
 

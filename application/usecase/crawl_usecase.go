@@ -27,18 +27,18 @@ func (c *crawler) Start(ctx context.Context, crawlerConfig *config.Config) {
 
 	wg.Add(len(crawlerConfig.Page))
 	for _, website := range crawlerConfig.Page {
-		var website = &models.WebSite{
+		var page = &models.WebSite{
 			Namespace:     website.Namespace,
 			StartPage:     website.StartPage,
 			AllowedDomain: website.AllowedDomain,
 			DownloaderNum: website.DownloaderNum,
 		}
 
-		go func() {
+		go func(website *models.WebSite) {
 			defer wg.Done()
 			log.Printf("start crawl: %v\n", website)
 			c.crawlerService.CrawlPage(ctx, website)
-		}()
+		}(page)
 	}
 	wg.Wait()
 }
