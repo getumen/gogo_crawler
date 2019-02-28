@@ -59,6 +59,7 @@ func (c *crawlerService) CrawlPage(ctx context.Context, website *models.WebSite)
 	if err == nil {
 		req := models.NewRequest(u, "GET", nil)
 		req.SetNamespace(website.Namespace)
+		req.SetLastRequest(time.Now())
 		newRequestPipeline <- req
 	}
 	for range out {
