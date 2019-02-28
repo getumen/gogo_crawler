@@ -71,9 +71,11 @@ func (r *requestRedisRepository) FindAllByDomainAndBeforeTimeOrderByNextRequest(
 		return nil, err
 	}
 
-	_, err = conn.Do(ZREM, PQ+namespace, urls)
-	if err != nil {
-		return nil, err
+	if len(urls) > 0 {
+		_, err = conn.Do(ZREM, redis.Args{}.Add(PQ + namespace).AddFlat(urls)...)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	m := newRequestMap()
