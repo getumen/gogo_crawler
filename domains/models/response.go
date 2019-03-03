@@ -111,6 +111,8 @@ func (r *Response) UrlPath() string {
 }
 
 func (r *Response) UrlParse(ref string) (*url.URL, error) {
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
 	return r.request.URL.Parse(ref)
 }
 

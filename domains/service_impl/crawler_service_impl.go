@@ -55,12 +55,14 @@ func (c *crawlerService) CrawlPage(ctx context.Context, website *models.WebSite)
 
 	out := funIn(out1, out2, out3)
 
-	u, err := url.Parse(website.StartPage)
+	u, err := url.ParseRequestURI(website.StartPage)
 	if err == nil {
 		req := models.NewRequest(u, "GET", nil)
 		req.SetNamespace(website.Namespace)
 		req.SetLastRequest(time.Now())
 		newRequestPipeline <- req
+	} else {
+		log.Fatalln(err)
 	}
 	for range out {
 	}
