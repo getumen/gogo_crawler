@@ -23,6 +23,7 @@ func newResponseDB(response *models.Response) *responseDB {
 		response.UrlString(),
 		string(response.Body()),
 		makeDate(response.CreateAt()),
+		response.CreateAt(),
 	}
 
 }
