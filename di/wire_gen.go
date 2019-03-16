@@ -11,7 +11,6 @@ import (
 	"github.com/getumen/gogo_crawler/domains/service_impl"
 	"github.com/getumen/gogo_crawler/infras/http"
 	"github.com/getumen/gogo_crawler/infras/persistence/mysql"
-	redis2 "github.com/getumen/gogo_crawler/infras/persistence/redis"
 	"github.com/gomodule/redigo/redis"
 	"github.com/jinzhu/gorm"
 )
@@ -20,7 +19,7 @@ import (
 
 func InitializeCrawler(config2 *config.Config, db *gorm.DB, redisConn *redis.Pool) (usecase.Crawler, error) {
 	httpClientRepository := http.NewHttpClientRepository(config2)
-	requestRepository := redis2.NewRequestRedisRepository(redisConn)
+	requestRepository := mysql.NewRequestMysqlRepository(db)
 	responseRepository := mysql.NewResponseMysqlRepository(db)
 	scheduleRule := service_impl.NewPoissonProcessRule()
 	crawlerService := service_impl.NewCrawlerService(httpClientRepository, requestRepository, responseRepository, scheduleRule)
