@@ -205,7 +205,7 @@ func newRequestRedis(m *models.Request) (*requestRedis, error) {
 }
 
 func newRequestFromRedis(r *requestRedis) (*models.Request, error) {
-	u, err := url.Parse(r.Url)
+	u, err := url.ParseRequestURI(r.Url)
 	if err != nil {
 		return nil, err
 	}
