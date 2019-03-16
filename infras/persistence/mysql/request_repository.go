@@ -99,7 +99,7 @@ func newRequestDB(m *models.Request) (*requestDB, error) {
 }
 
 func newRequestFromDB(r *requestDB) (*models.Request, error) {
-	u, err := url.Parse(r.Url)
+	u, err := url.ParseRequestURI(r.Url)
 	if err != nil {
 		return nil, err
 	}
