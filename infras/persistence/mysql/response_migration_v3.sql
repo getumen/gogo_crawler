@@ -1,0 +1,1 @@
+create index date_idx on response(`date`);
