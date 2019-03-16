@@ -1,0 +1,1 @@
+alter table request change url_hash url_hash varchar(256);

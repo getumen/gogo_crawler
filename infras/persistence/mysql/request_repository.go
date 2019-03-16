@@ -2,7 +2,7 @@ package mysql
 
 import (
 	"context"
-	"crypto/md5"
+	"crypto/sha512"
 	"fmt"
 	"github.com/getumen/gogo_crawler/domains/models"
 	"github.com/getumen/gogo_crawler/domains/repository"
@@ -72,7 +72,7 @@ func (r *requestMysqlRepository) Save(ctx context.Context, req *models.Request) 
 }
 
 func hash(url string) string {
-	h := md5.New()
+	h := sha512.New()
 	_, _ = io.WriteString(h, url)
 	return fmt.Sprintf("%x", h.Sum(nil))
 }

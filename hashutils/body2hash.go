@@ -2,7 +2,7 @@ package hashutils
 
 import (
 	"bytes"
-	"crypto/md5"
+	"crypto/sha512"
 	"encoding/base64"
 	"errors"
 	"golang.org/x/net/html"
@@ -11,7 +11,7 @@ import (
 )
 
 func HashHTMLBody(b []byte) string {
-	f := md5.New()
+	f := sha512.New()
 
 	doc, _ := html.Parse(strings.NewReader(string(b)))
 	bn, err := getBody(doc)
