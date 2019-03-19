@@ -8,6 +8,7 @@ import (
 	"github.com/getumen/gogo_crawler/config"
 	"github.com/getumen/gogo_crawler/di"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/gocql/gocql"
 	"github.com/gomodule/redigo/redis"
 	"github.com/jinzhu/gorm"
 	"io/ioutil"
@@ -128,4 +129,14 @@ func NewRedisConnection(conf *config.Config) *redis.Pool {
 			)
 		},
 	}
+}
+
+func NewCassandraConnection(conf *config.Config) *gocql.Session {
+	cluster := gocql.NewCluster(conf.Cassandra.Cluster...)
+	cluster.Keyspace = conf.Cassandra.KeySpace
+	session, err := cluster.CreateSession()
+	if err != nil {
+		log.Fatalln(err)
+	}
+	return session
 }
