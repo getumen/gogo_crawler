@@ -13,4 +13,4 @@ CREATE TABLE request
   last_request bigint,
   stats        map<text, double>,
   PRIMARY KEY ((namespace, url), next_request)
-) WITH CLUSTERING ORDER BY (next_request DESC);
+) WITH CLUSTERING ORDER BY (next_request ASC);
