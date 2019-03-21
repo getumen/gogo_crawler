@@ -3,14 +3,14 @@
 
 CREATE TABLE request
 (
-  url_hash     text,
+  namespace    text,
+  url          text,
   next_request bigint,
-  url          text, -- url string
   method       text,
   body         blob,
   cookie       blob,
   job_status   int,
   last_request bigint,
   stats        map<text, double>,
-  PRIMARY KEY ((url_hash), next_request)
+  PRIMARY KEY ((namespace, url), next_request)
 ) WITH CLUSTERING ORDER BY (next_request DESC);
