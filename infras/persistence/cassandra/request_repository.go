@@ -79,8 +79,6 @@ func (r *requestRepository) FindAllByDomainAndBeforeTimeOrderByNextRequest(
 		" FROM request"+
 		" WHERE namespace = ?"+
 		" AND url in (%s)", strings.Join(qu, ",")), args...).Iter()
-	//log.Println(iter)
-	//log.Printf("request = %d", iter.NumRows())
 
 	for iter.MapScan(m) {
 		req, err := newRequestFromDB(&request{

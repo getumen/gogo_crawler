@@ -179,7 +179,7 @@ func (c *crawlerService) generateRequest(ctx context.Context, namespace string) 
 					log.Println(err)
 					continue
 				}
-				log.Printf("Scheduling %d request\n", len(requests))
+				log.Printf("Scheduling %d request in %s\n", len(requests), namespace)
 				for _, request := range requests {
 					out <- request
 				}
