@@ -10,16 +10,17 @@ import (
 	"github.com/getumen/gogo_crawler/config"
 	"github.com/getumen/gogo_crawler/domains/service_impl"
 	"github.com/getumen/gogo_crawler/infras/http"
+	"github.com/getumen/gogo_crawler/infras/persistence/cassandra"
 	"github.com/getumen/gogo_crawler/infras/persistence/mysql"
-	"github.com/gomodule/redigo/redis"
+	"github.com/gocql/gocql"
 	"github.com/jinzhu/gorm"
 )
 
 // Injectors from wire.go:
 
-func InitializeCrawler(config2 *config.Config, db *gorm.DB, redisConn *redis.Pool) (usecase.Crawler, error) {
+func InitializeCrawler(config2 *config.Config, db *gorm.DB, sess *gocql.Session) (usecase.Crawler, error) {
 	httpClientRepository := http.NewHttpClientRepository(config2)
-	requestRepository := mysql.NewRequestMysqlRepository(db)
+	requestRepository := cassandra.NewRequestCassandraRepository(sess)
 	responseRepository := mysql.NewResponseMysqlRepository(db)
 	scheduleRule := service_impl.NewPoissonProcessRule()
 	crawlerService := service_impl.NewCrawlerService(httpClientRepository, requestRepository, responseRepository, scheduleRule)

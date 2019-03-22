@@ -11,6 +11,10 @@ host = "localhost"
 port = 6379
 connection = "tcp"
 
+[Cassandra]
+cluster = ["localhost"]
+keySpace = "crawler"
+
 [Http]
 proxyUrl = ""
 
