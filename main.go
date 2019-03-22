@@ -110,6 +110,8 @@ func NewMySQLConnection(config *config.Config) *gorm.DB {
 	if err != nil {
 		log.Fatalln(err)
 	}
+	conn.DB().SetMaxIdleConns(10)
+	conn.DB().SetMaxOpenConns(100)
 	return conn
 }
 
