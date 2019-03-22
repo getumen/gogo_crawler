@@ -202,7 +202,7 @@ func (c *crawlerService) scheduleRequest(ctx context.Context, in <-chan *models.
 		defer close(out)
 
 		for resp := range in {
-			r, err := c.requestRepository.FindByUrl(ctx, resp.UrlString())
+			r, err := c.requestRepository.FindByUrl(ctx, resp.Namespace(), resp.UrlString())
 			if err != nil {
 				log.Println(err)
 				continue
@@ -253,7 +253,7 @@ func (c *crawlerService) scheduleNewRequest(ctx context.Context, in <-chan *mode
 	go func() {
 		defer close(out)
 		for request := range in {
-			exist, err := c.requestRepository.IsExist(ctx, request.UrlString())
+			exist, err := c.requestRepository.IsExist(ctx, request.Namespace(), request.UrlString())
 			if err != nil {
 				log.Println(err)
 				continue

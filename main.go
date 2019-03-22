@@ -52,15 +52,10 @@ func main() {
 			log.Println(err)
 		}
 	}()
-	redisConn := NewRedisConnection(&conf)
-	defer func() {
-		err := redisConn.Close()
-		if err != nil {
-			log.Println(err)
-		}
-	}()
+	session := NewCassandraConnection(&conf)
+	defer session.Close()
 
-	crawler, err := di.InitializeCrawler(&conf, db, redisConn)
+	crawler, err := di.InitializeCrawler(&conf, db, session)
 	if err != nil {
 		log.Fatalln(err)
 	}

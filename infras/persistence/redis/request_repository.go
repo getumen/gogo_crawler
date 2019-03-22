@@ -37,7 +37,7 @@ func NewRequestRedisRepository(pool *redis.Pool) repository.RequestRepository {
 	return &requestRedisRepository{pool: pool}
 }
 
-func (r *requestRedisRepository) IsExist(ctx context.Context, url string) (bool, error) {
+func (r *requestRedisRepository) IsExist(ctx context.Context, namespace, url string) (bool, error) {
 	conn, err := r.pool.GetContext(ctx)
 	if err != nil {
 		return false, err
@@ -139,7 +139,7 @@ func (r *requestMap) store(key string, req requestRedis) {
 	r.m.Store(key, req)
 }
 
-func (r *requestRedisRepository) FindByUrl(ctx context.Context, url string) (*models.Request, error) {
+func (r *requestRedisRepository) FindByUrl(ctx context.Context, namespace, url string) (*models.Request, error) {
 	conn, err := r.pool.GetContext(ctx)
 	if err != nil {
 		return nil, err

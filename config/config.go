@@ -1,10 +1,11 @@
 package config
 
 type Config struct {
-	MySQL MySQLConfig
-	Redis RedisConfig
-	Http  HttpConfig
-	Page  []WebSite
+	MySQL     MySQLConfig
+	Redis     RedisConfig
+	Http      HttpConfig
+	Page      []WebSite
+	Cassandra Cassandra
 }
 
 type MySQLConfig struct {
@@ -31,4 +32,9 @@ type WebSite struct {
 	StartPage     string
 	AllowedDomain string
 	DownloaderNum int
+}
+
+type Cassandra struct {
+	Cluster  []string
+	KeySpace string
 }

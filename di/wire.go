@@ -7,17 +7,18 @@ import (
 	"github.com/getumen/gogo_crawler/config"
 	"github.com/getumen/gogo_crawler/domains/service_impl"
 	"github.com/getumen/gogo_crawler/infras/http"
+	"github.com/getumen/gogo_crawler/infras/persistence/cassandra"
 	"github.com/getumen/gogo_crawler/infras/persistence/mysql"
-	"github.com/gomodule/redigo/redis"
+	"github.com/gocql/gocql"
 	"github.com/google/wire"
 	"github.com/jinzhu/gorm"
 )
 
-func InitializeCrawler(config *config.Config, db *gorm.DB, redisConn *redis.Pool) (usecase.Crawler, error) {
+func InitializeCrawler(config *config.Config, db *gorm.DB, sess *gocql.Session) (usecase.Crawler, error) {
 	wire.Build(
 		http.NewHttpClientRepository,
+		cassandra.NewRequestCassandraRepository,
 		mysql.NewResponseMysqlRepository,
-		mysql.NewRequestMysqlRepository,
 		service_impl.NewPoissonProcessRule,
 		service_impl.NewCrawlerService,
 		usecase.NewCrawler,
