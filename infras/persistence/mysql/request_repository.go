@@ -22,13 +22,13 @@ func NewRequestMysqlRepository(db *gorm.DB) repository.RequestRepository {
 	return &requestMysqlRepository{db: db}
 }
 
-func (r *requestMysqlRepository) IsExist(ctx context.Context, url string) (bool, error) {
+func (r *requestMysqlRepository) IsExist(ctx context.Context, namespace, url string) (bool, error) {
 	found := !r.db.First(&requestDB{}, "url_hash = ?", hash(url)).RecordNotFound()
 	return found, nil
 }
 
 func (r *requestMysqlRepository) FindAllByDomainAndBeforeTimeOrderByNextRequest(ctx context.Context,
-	domain string,
+	namespace string,
 	now time.Time,
 	offset,
 	limit int) ([]*models.Request, error) {
@@ -36,7 +36,7 @@ func (r *requestMysqlRepository) FindAllByDomainAndBeforeTimeOrderByNextRequest(
 	r.db.Limit(limit).Offset(offset).Where(
 		"next_request < ? AND namespace = ?",
 		now.Unix(),
-		domain).Order("next_request asc").Find(&reqs)
+		namespace).Order("next_request asc").Find(&reqs)
 	requests := []*models.Request{}
 	urlHashList := []string{}
 	for _, req := range reqs {
@@ -51,7 +51,7 @@ func (r *requestMysqlRepository) FindAllByDomainAndBeforeTimeOrderByNextRequest(
 	return requests, nil
 }
 
-func (r *requestMysqlRepository) FindByUrl(ctx context.Context, url string) (*models.Request, error) {
+func (r *requestMysqlRepository) FindByUrl(ctx context.Context, namespace, url string) (*models.Request, error) {
 	key := hash(url)
 	req := &requestDB{}
 	r.db.Where(&requestDB{UrlHash: key}).First(req)

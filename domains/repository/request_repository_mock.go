@@ -36,42 +36,42 @@ func (m *MockRequestRepository) EXPECT() *MockRequestRepositoryMockRecorder {
 }
 
 // IsExist mocks base method
-func (m *MockRequestRepository) IsExist(ctx context.Context, url string) (bool, error) {
-	ret := m.ctrl.Call(m, "IsExist", ctx, url)
+func (m *MockRequestRepository) IsExist(ctx context.Context, namespace, url string) (bool, error) {
+	ret := m.ctrl.Call(m, "IsExist", ctx, namespace, url)
 	ret0, _ := ret[0].(bool)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // IsExist indicates an expected call of IsExist
-func (mr *MockRequestRepositoryMockRecorder) IsExist(ctx, url interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsExist", reflect.TypeOf((*MockRequestRepository)(nil).IsExist), ctx, url)
+func (mr *MockRequestRepositoryMockRecorder) IsExist(ctx, namespace, url interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsExist", reflect.TypeOf((*MockRequestRepository)(nil).IsExist), ctx, namespace, url)
 }
 
 // FindAllByDomainAndBeforeTimeOrderByNextRequest mocks base method
-func (m *MockRequestRepository) FindAllByDomainAndBeforeTimeOrderByNextRequest(ctx context.Context, domain string, now time.Time, offset, limit int) ([]*models.Request, error) {
-	ret := m.ctrl.Call(m, "FindAllByDomainAndBeforeTimeOrderByNextRequest", ctx, domain, now, offset, limit)
+func (m *MockRequestRepository) FindAllByDomainAndBeforeTimeOrderByNextRequest(ctx context.Context, namespace string, now time.Time, offset, limit int) ([]*models.Request, error) {
+	ret := m.ctrl.Call(m, "FindAllByDomainAndBeforeTimeOrderByNextRequest", ctx, namespace, now, offset, limit)
 	ret0, _ := ret[0].([]*models.Request)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // FindAllByDomainAndBeforeTimeOrderByNextRequest indicates an expected call of FindAllByDomainAndBeforeTimeOrderByNextRequest
-func (mr *MockRequestRepositoryMockRecorder) FindAllByDomainAndBeforeTimeOrderByNextRequest(ctx, domain, now, offset, limit interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindAllByDomainAndBeforeTimeOrderByNextRequest", reflect.TypeOf((*MockRequestRepository)(nil).FindAllByDomainAndBeforeTimeOrderByNextRequest), ctx, domain, now, offset, limit)
+func (mr *MockRequestRepositoryMockRecorder) FindAllByDomainAndBeforeTimeOrderByNextRequest(ctx, namespace, now, offset, limit interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindAllByDomainAndBeforeTimeOrderByNextRequest", reflect.TypeOf((*MockRequestRepository)(nil).FindAllByDomainAndBeforeTimeOrderByNextRequest), ctx, namespace, now, offset, limit)
 }
 
 // FindByUrl mocks base method
-func (m *MockRequestRepository) FindByUrl(ctx context.Context, url string) (*models.Request, error) {
-	ret := m.ctrl.Call(m, "FindByUrl", ctx, url)
+func (m *MockRequestRepository) FindByUrl(ctx context.Context, namespace, url string) (*models.Request, error) {
+	ret := m.ctrl.Call(m, "FindByUrl", ctx, namespace, url)
 	ret0, _ := ret[0].(*models.Request)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // FindByUrl indicates an expected call of FindByUrl
-func (mr *MockRequestRepositoryMockRecorder) FindByUrl(ctx, url interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByUrl", reflect.TypeOf((*MockRequestRepository)(nil).FindByUrl), ctx, url)
+func (mr *MockRequestRepositoryMockRecorder) FindByUrl(ctx, namespace, url interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByUrl", reflect.TypeOf((*MockRequestRepository)(nil).FindByUrl), ctx, namespace, url)
 }
 
 // Save mocks base method
