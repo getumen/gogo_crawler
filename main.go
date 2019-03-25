@@ -132,6 +132,7 @@ func NewCassandraConnection(conf *config.Config) *gocql.Session {
 	cluster := gocql.NewCluster(conf.Cassandra.Cluster...)
 	cluster.Keyspace = conf.Cassandra.KeySpace
 	cluster.Timeout = 5 * time.Second
+	cluster.Consistency = gocql.One
 	session, err := cluster.CreateSession()
 	if err != nil {
 		log.Fatalln(err)
