@@ -43,13 +43,12 @@ func (r *requestRepository) FindAllByDomainAndBeforeTimeOrderByNextRequest(
 	}
 
 	var reqs []*models.Request
-	m := map[string]interface{}{}
 
 	iter := r.session.Query("SELECT *"+
 		" FROM request_pq"+
 		" WHERE namespace = ?"+
 		" AND next_request < ?"+
-		" ORDER BY next_request ASC"+
+		" ORDER BY next_request ASC, url ASC"+
 		" LIMIT ?", namespace, now.Unix(), limit).Iter()
 
 	//log.Printf("request_pq = %d", iter.NumRows())
@@ -57,12 +56,16 @@ func (r *requestRepository) FindAllByDomainAndBeforeTimeOrderByNextRequest(
 	batch := r.session.NewBatch(gocql.LoggedBatch)
 	var urls []string
 
-	for iter.MapScan(m) {
+	sliceMap, err := iter.SliceMap()
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, m := range sliceMap {
 		urls = append(urls, m["url"].(string))
 		batch.Query("DELETE FROM request_pq WHERE namespace = ? AND next_request = ? AND url = ?",
 			namespace, m["next_request"], m["url"])
-		// clear map
-		m = map[string]interface{}{}
 	}
 
 	qu := make([]string, len(urls))
@@ -80,7 +83,13 @@ func (r *requestRepository) FindAllByDomainAndBeforeTimeOrderByNextRequest(
 		" WHERE namespace = ?"+
 		" AND url in (%s)", strings.Join(qu, ",")), args...).Iter()
 
-	for iter.MapScan(m) {
+	sliceMap, err = iter.SliceMap()
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, m := range sliceMap {
 		req, err := newRequestFromDB(&request{
 			Url:         m["url"].(string),
 			Method:      m["method"].(string),
@@ -92,8 +101,6 @@ func (r *requestRepository) FindAllByDomainAndBeforeTimeOrderByNextRequest(
 			Stats:       m["stats"].([]byte),
 			Namespace:   m["namespace"].(string),
 		})
-		// clear map
-		m = map[string]interface{}{}
 
 		if err != nil {
 			log.Println(err)
@@ -101,7 +108,7 @@ func (r *requestRepository) FindAllByDomainAndBeforeTimeOrderByNextRequest(
 		}
 		reqs = append(reqs, req)
 	}
-	err := r.session.ExecuteBatch(batch)
+	err = r.session.ExecuteBatch(batch)
 	if err != nil {
 		return nil, err
 	}
