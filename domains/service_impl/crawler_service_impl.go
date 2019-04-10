@@ -61,6 +61,8 @@ func (c *crawlerService) CrawlPage(ctx context.Context, website *models.WebSite)
 		req.SetNamespace(website.Namespace)
 		req.SetLastRequest(time.Now())
 		newRequestPipeline <- req
+	} else {
+		log.Fatalln(err)
 	}
 	for range out {
 	}
