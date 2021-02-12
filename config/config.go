@@ -38,3 +38,10 @@ type Cassandra struct {
 	Cluster  []string
 	KeySpace string
 }
+
+type MinioConfig struct {
+	Endpoint        string
+	AccessKeyID     string
+	SecretAccessKey string
+	UseSSL          bool
+}
